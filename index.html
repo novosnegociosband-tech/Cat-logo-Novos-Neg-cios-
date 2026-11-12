@@ -637,6 +637,28 @@ body{background:transparent}
 .g-head h2,.g-head h3{white-space:nowrap}
 
 .modo-supa .no-supa{display:none!important}
+/* baixa na ficha */
+.mbx{background:var(--bg);border-radius:20px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.mbx-h{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mbx-h b{font-size:15px}
+.mbx-h small{font-size:12px;font-weight:600;color:var(--ink-3)}
+.mbx .bx-form{gap:8px 10px}
+.mbx .fld input,.mbx .fld select{background-color:var(--card);height:44px}
+.mbx-q{display:grid;grid-template-columns:44px minmax(0,1fr) 44px;gap:6px}
+.mbx-q button{height:44px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);font-size:20px;font-weight:700;cursor:pointer;color:var(--ink)}
+.mbx-q input{text-align:center;font-weight:800}
+.mbx-acts{display:flex;gap:8px}
+.mbx-acts .btn{height:46px}
+.mbx-acts .btn:not(.bx-go){background:var(--card);border:1.5px solid var(--line)}
+.mbx .msg{margin-top:0}
+.btn.bx-go{background:#d23b3b;color:#fff}
+.mbox.bx-on .mnav{display:none}
+.mbox.bx-on .mbx{margin-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+.mnav .btn{white-space:nowrap}
+.btn.bx-go svg{stroke:#fff}
+.mnav .btn{min-width:0;padding:0 12px}
+@media (max-width:520px){.mbx .bx-form{grid-template-columns:repeat(2,minmax(0,1fr))}.mbx .mbx-qf,.mbx .mbx-of{grid-column:1/-1}}
+@media (max-width:440px){.mnav .btn{font-size:14px;padding:0 8px}.mnav .btn svg{display:none}}
 /* login e perfis */
 .login{position:fixed;inset:0;z-index:200;display:grid;place-items:center;overflow:auto}
 .lg-box{width:min(380px,100%);border-radius:28px;padding:30px 24px 24px;display:flex;flex-direction:column;gap:14px}
@@ -939,8 +961,22 @@ body{background:transparent}
       <div class="big" id="mBig"><b id="mQty"></b><span id="mLbl">unidades em estoque</span></div>
       <div class="mflow" id="mFlow"></div>
       <div id="mMoney"></div>
+      <form class="mbx" id="mBx" hidden autocomplete="off">
+        <div class="mbx-h"><b>Dar baixa</b><small id="mBxHint"></small></div>
+        <div class="bx-form">
+          <div class="fld mbx-qf"><span>Quantidade</span><div class="mbx-q"><button type="button" data-q="-1" aria-label="Menos">−</button><input id="mBxQtd" type="number" inputmode="numeric" min="1" step="1" placeholder="0"><button type="button" data-q="1" aria-label="Mais">+</button></div></div>
+          <label class="fld" for="mBxData"><span>Data</span><input id="mBxData" type="date"></label>
+          <label class="fld" for="mBxDest"><span>Destino / Área</span><select id="mBxDest"></select></label>
+          <label class="fld" for="mBxMot"><span>Motivo</span><select id="mBxMot"></select></label>
+          <label class="fld" for="mBxResp"><span>Responsável</span><input id="mBxResp" list="bxRespL"></label>
+          <label class="fld mbx-of" for="mBxObs"><span>Observação</span><input id="mBxObs" placeholder="opcional" maxlength="200"></label>
+        </div>
+        <div id="mBxMsg" role="status" aria-live="polite"></div>
+        <div class="mbx-acts"><button class="btn" type="button" id="mBxCancel">Cancelar</button><button class="btn bx-go" type="submit" id="mBxOk">Confirmar baixa</button></div>
+      </form>
       <div class="mnav">
         <button class="btn" type="button" id="mPhoto"><svg><use href="#i-cam"/></svg>Trocar foto</button>
+        <button class="btn bx-go" type="button" id="mBaixa" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>Dar baixa</button>
         <button class="btn dark" type="button" data-close>Fechar</button>
       </div>
     </div>
@@ -1596,6 +1632,54 @@ $('q').addEventListener('keydown', e => { if (e.key==='Enter') e.target.blur(); 
 $('grid').addEventListener('click', e => { const b = e.target.closest('.item'); if(b) openItem(b.dataset.id); });
 $('modal').addEventListener('click', e => { if (e.target.closest('[data-close]')) closeItem(); const s = e.target.closest('[data-step]'); if (s) step(+s.dataset.step); });
 $('mPhoto').addEventListener('click', () => openPhotoSheet(current));
+/* ---------- dar baixa na ficha (só ADM com o banco ligado) ---------- */
+const podeBaixar = () => !!(sb && ROLE === 'adm');
+function mBxFechar(){ $('mBx').hidden = true; $('mbox').classList.remove('bx-on'); $('mBxMsg').className = ''; $('mBxMsg').textContent = ''; $('mBaixa').hidden = !podeBaixar(); }
+function mBxHint(){
+  const it = current && BY.get(String(current)), q = +$('mBxQtd').value || 0, h = $('mBxHint');
+  if (!it) return;
+  h.style.color = q > it.qty ? 'var(--bad)' : '';
+  h.textContent = q > it.qty ? `Só tem ${fmt(it.qty)}` : q > 0 ? `Fica com ${fmt(it.qty - q)}` : `Disponível: ${fmt(it.qty)}`;
+}
+function mBxAbrir(){
+  if (!podeBaixar()) return;
+  const sel = (el, arr, pad) => { const v = el.value; el.innerHTML = arr.map(x => `<option${x===(v||pad)?' selected':''}>${esc(x)}</option>`).join(''); };
+  sel($('mBxDest'), juntar(BX_DEST,5), 'Filial'); sel($('mBxMot'), juntar(BX_MOT,6), 'Bonificação');
+  if ($('bxRespL') && !$('bxRespL').children.length) $('bxRespL').innerHTML = juntar(BX_RESP,4).map(x => `<option value="${esc(x)}">`).join('');
+  if (!$('mBxResp').value) $('mBxResp').value = NOME || '';
+  if (!$('mBxData').value) $('mBxData').value = hojeISO();
+  $('mBxQtd').value = ''; $('mBxObs').value = ''; $('mBxMsg').className = ''; $('mBxMsg').textContent = '';
+  $('mBx').hidden = false; $('mbox').classList.add('bx-on'); $('mBaixa').hidden = true; mBxHint();
+  $('mBx').scrollIntoView({block:'nearest', behavior:'smooth'}); setTimeout(() => $('mBxQtd').focus({preventScroll:true}), 250);
+}
+{ const _abrirItem = openItem;
+  openItem = function(id){ const antes = current, fechado = $('modal').hidden, mi = document.querySelector('.minfo'), st = [mi.scrollTop, $('mbox').scrollTop]; _abrirItem(id); if (!fechado && String(antes) === String(current)) { mi.scrollTop = st[0]; $('mbox').scrollTop = st[1]; } if (fechado || String(antes) !== String(current)) mBxFechar(); else if (!$('mBx').hidden) mBxHint(); else $('mBaixa').hidden = !podeBaixar(); }; }
+$('mBaixa').addEventListener('click', mBxAbrir);
+$('mBxCancel').addEventListener('click', mBxFechar);
+$('mBxQtd').addEventListener('input', mBxHint);
+$('mBx').addEventListener('click', e => { const b = e.target.closest('[data-q]'); if (!b) return; const v = Math.max(0, (+$('mBxQtd').value || 0) + (+b.dataset.q)); $('mBxQtd').value = v || ''; mBxHint(); });
+$('mBx').addEventListener('submit', async e => {
+  e.preventDefault();
+  const m = $('mBxMsg'), it = current && BY.get(String(current)), q = +$('mBxQtd').value || 0;
+  const erro = t => { m.className = 'msg err'; m.textContent = t; };
+  if (!podeBaixar()) return erro('Só ADM pode dar baixa.');
+  if (!it) return;
+  if (q <= 0) return erro('Informe a quantidade.');
+  if (q > it.qty) return erro(`Só tem ${fmt(it.qty)} disponível.`);
+  $('mBxOk').disabled = true; m.className = 'msg info'; m.textContent = 'Dando baixa…';
+  try {
+    const {data, error} = await sb.rpc('dar_baixa', {p_material:it.id, p_qtd:q, p_data:$('mBxData').value || null,
+      p_resp:$('mBxResp').value.trim(), p_destino:$('mBxDest').value, p_motivo:$('mBxMot').value, p_obs:$('mBxObs').value.trim()});
+    if (error) throw error;
+    mBxFechar();
+    toast(`Baixa de ${fmt(q)} × ${it.nome} registrada. Vai pro Excel em até 2 min.`);
+    await supaEstoque();
+    if (current && !$('modal').hidden) openItem(current);
+  } catch(err) {
+    const t = (err && err.message) || '';
+    erro(/dar_baixa/i.test(t) && /could not find|does not exist|schema cache/i.test(t) ? 'Falta atualizar o banco: rode o 07_excel_portal.sql no Supabase.' : (t || 'Não consegui dar baixa agora.'));
+  } finally { $('mBxOk').disabled = false; }
+});
 document.addEventListener('keydown', e => {
   if (!$('psheet').hidden && e.key==='Escape') return closePhotoSheet();
   if ($('modal').hidden) return;
