@@ -508,7 +508,25 @@ section[id^="v-"] .sec-head .eyebrow i{background:var(--wine);box-shadow:none}
 .uname span{display:block;font-size:12.5px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .uacts{display:flex;gap:6px}
 .mini{height:38px;padding:0 13px;border-radius:12px;border:1.5px solid var(--line);background:none;font-weight:700;font-size:12.5px;cursor:pointer;color:var(--ink-2);white-space:nowrap}
-.mini.bad{color:var(--bad)} .mini.go{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mini.bad{color:var(--bad)}
+.tg.novo{background:#e6edff;color:#2d4fc4}
+[data-theme="dark"] .tg.novo{background:#1d2a52;color:#9db4ff}
+.pend{margin-top:14px}
+.pend-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.pend-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0 4px}
+.pend-kpis button{border:0;text-align:left;cursor:pointer;background:var(--bg);border-radius:16px;padding:12px 14px;color:var(--ink-2);font-size:12.5px;font-weight:600;line-height:1.3}
+.pend-kpis button b{display:block;font-family:var(--display);font-size:26px;font-weight:800;color:var(--ink);letter-spacing:-.02em;margin-bottom:2px}
+.pend-kpis button.alerta b{color:var(--bad)}
+.pend-kpis button[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--ink)}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px;margin-top:10px}
+.prow{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:center;border:0;background:var(--bg);border-radius:14px;padding:6px 10px 6px 6px;text-align:left;cursor:pointer;color:var(--ink);min-width:0}
+.prow .pic{width:48px;height:48px;border-radius:10px}
+.prow b{display:block;font-size:13px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow small{display:block;font-size:11.5px;color:var(--ink-3);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prow .go{font-size:12px;font-weight:700;color:var(--wine);white-space:nowrap}
+.novos-box{margin-top:12px}
+.novos-box .plist{margin-top:8px}
+@media (max-width:640px){.pend-kpis{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.pend-kpis button{padding:10px;font-size:11.5px}.pend-kpis button b{font-size:22px}.plist{grid-template-columns:minmax(0,1fr)}} .mini.go{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .mini:disabled{opacity:.45;cursor:not-allowed}
 .uedit{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;align-items:end;background:var(--bg);border-radius:16px;padding:12px}
 .uedit .fld input{background:var(--card);height:42px}
@@ -743,7 +761,12 @@ section[id^="v-"] .sec-head .eyebrow i{background:var(--wine);box-shadow:none}
     <div class="sec-head">
       <div class="eyebrow">Acessos</div>
       <h1>Gestão</h1>
-      <p>Cadastre quem pode entrar no portal e escolha quem é ADM ou usuário.</p>
+      <p>Veja os materiais novos e os que estão sem foto, e controle quem entra no portal.</p>
+    </div>
+    <div class="box pend" id="pendBox">
+      <div class="pend-head"><h3>Pendências do estoque</h3><small id="pendInfo" style="color:var(--ink-3);font-weight:600"></small></div>
+      <div class="pend-kpis" id="pendKpis"></div>
+      <div id="pendList"></div>
     </div>
     <div class="g-grid">
       <form class="box conn" id="gForm" autocomplete="off">
@@ -876,6 +899,15 @@ const bstyle = m => { const k = bcol(m); return `--c:${k.c};--soft:${k.soft}`; }
 const initials = s => norm(s).replace(/[^A-Z ]/g,'').split(/\s+/).filter(w=>w.length>2).slice(0,2).map(w=>w[0]).join('') || '•';
 
 /* ---------- estado ---------- */
+/* ---------- materiais novos (vindos da última planilha) ---------- */
+const NOVO_DIAS = 30;
+function novosIds(){
+  if (!DATA || !Array.isArray(DATA.novos) || !DATA.novos_em) return new Set();
+  if (Date.now() - new Date(DATA.novos_em).getTime() > NOVO_DIAS*864e5) return new Set();
+  return new Set(DATA.novos.map(String));
+}
+const novoTag = it => novosIds().has(String(it.id)) ? '<span class="tg novo">Novo</span>' : '';
+
 /* ---------- tema claro / escuro ---------- */
 const TEMA_KEY = 'estoqueARTD.tema';
 const temaMQ = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
@@ -1066,7 +1098,7 @@ function render(){
       <div class="txt">
         <div class="top"><span class="cod"><em>Cód.</em>${hl(it.id, words)}</span><span class="bl">${esc(it.marcaT)}</span></div>
         <div class="nm">${hl(it.nome, words)}</div>
-        <div class="tags">${tagHTML(it)}${it.qty<=0?'<span class="tg bad">Zerado</span>':''}</div>
+        <div class="tags">${novoTag(it)}${tagHTML(it)}${it.qty<=0?'<span class="tg bad">Zerado</span>':''}</div>
         ${priceHTML(it)}
       </div>
       <div class="q"><b>${fmt(it.qty)}</b><span>unidades</span>${it.pago && it.vtotal>0?`<em>total <b>${brl(it.vtotal)}</b></em>`:''}</div>
@@ -1084,7 +1116,7 @@ function openItem(id){
   $('mImg').innerHTML = (VIEW.length>1 && idx>-1 ? `<button class="marr l" type="button" data-step="-1" aria-label="Anterior">‹</button><button class="marr r" type="button" data-step="1" aria-label="Próximo">›</button><span class="mcount">${idx+1} de ${VIEW.length}</span>` : '') + photoHTML(it, true);
   $('mBrand').textContent = it.marcaT; $('mCod').innerHTML = `<em>Cód.</em>${esc(it.id)}`;
   $('mName').textContent = it.nome;
-  $('mTags').innerHTML = tagHTML(it) + (it.qty<=0?'<span class="tg bad">Zerado</span>':'');
+  $('mTags').innerHTML = novoTag(it) + tagHTML(it) + (it.qty<=0?'<span class="tg bad">Zerado</span>':'');
   $('mBig').className = 'big' + (it.qty<=0 ? ' zero' : '');
   $('mQty').textContent = fmt(it.qty);
   const chegou = it.ini + it.ent;
@@ -1306,7 +1338,7 @@ async function clearPhoto(id, removed){
     toast(removed ? 'Foto removida' : 'Foto cadastrada de volta'); refreshAll();
   } catch(e){ toast((e && e.message) || 'Não consegui alterar a foto agora.'); }
 }
-function refreshAll(){ render(); renderPhotos(); if (current) openItem(current); }
+function refreshAll(){ render(); renderPhotos(); if (current) openItem(current); if (typeof pendRender==='function' && !$('v-gestao').hidden) pendRender(); }
 
 /* ---------- leitura da planilha ---------- */
 function findSheet(wb, name){ const n = norm(name); return wb.SheetNames.find(s => norm(s)===n) || wb.SheetNames.find(s => norm(s).includes(n)); }
@@ -1357,6 +1389,10 @@ async function handleFile(f){
   try {
     if (typeof XLSX==='undefined') throw new Error('O leitor de planilhas não carregou. Confira a internet e tente de novo.');
     const data = parseWorkbook(await f.arrayBuffer(), f.name);
+    const antes = new Set(((DATA && DATA.cad) || []).map(r => String(r[0])));
+    const idsNovos = antes.size ? data.cad.map(r => String(r[0])).filter(id => id && !antes.has(id)) : [];
+    if (idsNovos.length) { data.novos = idsNovos; data.novos_em = data.at; }
+    else if (DATA && Array.isArray(DATA.novos) && DATA.novos_em) { data.novos = DATA.novos.filter(id => data.cad.some(r => String(r[0])===String(id))); data.novos_em = DATA.novos_em; }
     lsSet(KEY+'.data', data);
     let where = 'neste aparelho';
     if (SUPA){
@@ -1373,8 +1409,15 @@ async function handleFile(f){
       else where = 'neste aparelho (planilha grande demais para sincronizar)';
     }
     load(data);
-    msg.className='msg ok'; msg.textContent = `Pronto. ${fmt(data.cad.length)} materiais e ${fmt(data.mv.length)} movimentações atualizados ${where}.`;
-    setTimeout(()=>{ go('estoque'); msg.textContent=''; msg.className=''; }, 1600);
+    const semFoto = idsNovos.filter(id => photoOf(id).kind==='none');
+    if (idsNovos.length) {
+      msg.className='msg ok';
+      msg.innerHTML = `Pronto. ${fmt(data.cad.length)} materiais e ${fmt(data.mv.length)} movimentações atualizados ${esc(where)}.<br><b>${idsNovos.length} ${idsNovos.length===1?'material novo cadastrado':'materiais novos cadastrados'}</b>${semFoto.length?`, ${semFoto.length} sem foto`:''}: ${idsNovos.slice(0,6).map(id=>esc((BY.get(id)||{}).nome||id)).join(', ')}${idsNovos.length>6?'…':''}.<br><button class="mini go" type="button" id="verNovos" style="margin-top:10px">Ver pendências na Gestão</button>`;
+      const b = $('verNovos'); if (b) b.addEventListener('click', () => { pendFiltro = 'novos'; go('gestao'); });
+    } else {
+      msg.className='msg ok'; msg.textContent = `Pronto. ${fmt(data.cad.length)} materiais e ${fmt(data.mv.length)} movimentações atualizados ${where}. Nenhum material novo.`;
+      setTimeout(()=>{ go('estoque'); msg.textContent=''; msg.className=''; }, 1800);
+    }
   } catch(e){
     msg.className='msg err'; msg.textContent = (e && e.message) || 'Não consegui ler esse arquivo. Confira se é a planilha de controle em .xlsx.';
   } finally { $('file').value=''; }
@@ -1562,8 +1605,34 @@ function gestaoRender(){
     </div>`; }).join('') : '<p style="margin:8px 0 0">Nenhum usuário cadastrado.</p>';
 
 }
+let pendFiltro = '';
+function pendRender(){
+  if (!$('pendBox')) return;
+  const nv = novosIds();
+  const novos = ITEMS.filter(it => nv.has(String(it.id)));
+  const semFoto = ITEMS.filter(it => photoOf(it.id).kind==='none');
+  const novosSem = novos.filter(it => photoOf(it.id).kind==='none');
+  if (!pendFiltro) pendFiltro = novosSem.length ? 'novos-sem' : semFoto.length ? 'sem' : 'novos';
+  $('pendInfo').textContent = DATA && DATA.novos_em && nv.size ? `Última planilha com novidades: ${new Date(DATA.novos_em).toLocaleDateString('pt-BR')}` : 'Nenhum material novo nos últimos 30 dias';
+  const k = (id, n, l, al) => `<button type="button" data-pf="${id}" aria-pressed="${pendFiltro===id}" class="${al&&n?'alerta':''}"><b>${fmt(n)}</b>${l}</button>`;
+  $('pendKpis').innerHTML = k('novos', novos.length, 'materiais novos') + k('novos-sem', novosSem.length, 'novos sem foto', true) + k('sem', semFoto.length, 'sem foto no total', true);
+  const lista = pendFiltro==='novos' ? novos : pendFiltro==='novos-sem' ? novosSem : semFoto;
+  const vazio = {novos:'Nenhum material novo na última planilha.', 'novos-sem':'Todos os materiais novos já têm foto.', sem:'Todos os materiais têm foto.'}[pendFiltro];
+  $('pendList').innerHTML = lista.length ? `<div class="plist">${lista.slice().sort((a,b)=>a.nome.localeCompare(b.nome)).map(it => { const sf = photoOf(it.id).kind==='none'; return `
+    <button class="prow" type="button" data-pid="${esc(it.id)}" style="${bstyle(it.marca)}">
+      <div class="pic">${photoHTML(it)}</div>
+      <span><b>${esc(it.nome)}</b><small>Cód. ${esc(it.id)} · ${esc(it.marcaT)} · ${fmt(it.qty)} un.</small></span>
+      <span class="go">${sf?'Pôr foto':'Ver'}</span>
+    </button>`; }).join('')}</div>` : `<p style="margin:10px 0 0">${vazio}</p>`;
+}
+if ($('pendBox')) {
+  $('pendKpis').addEventListener('click', e => { const b = e.target.closest('[data-pf]'); if (!b) return; pendFiltro = b.dataset.pf; pendRender(); });
+  $('pendList').addEventListener('click', e => { const b = e.target.closest('.prow'); if (!b) return; const id = b.dataset.pid;
+    if (photoOf(id).kind==='none') openPhotoSheet(id); else openItem(id); });
+}
 async function gestaoCarregar(){
   if (!sb || ROLE!=='adm') return;
+  pendRender();
   try {
     const s = await sb.auth.getSession(); gMeuId = (s.data.session && s.data.session.user.id) || '';
     const {data, error} = await sb.from('perfis').select('id,nome,usuario,papel').order('nome');
