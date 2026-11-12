@@ -542,6 +542,20 @@ section[id^="v-"] .sec-head .eyebrow i{background:var(--wine);box-shadow:none}
 /* menu com 5 abas no celular */
 @media (max-width:420px){.dock button{font-size:10.5px} .dock{gap:1px}}
 
+/* barra de marcas: no computador quebra linha; no celular rola com um esmaecido na borda */
+@media (min-width:900px){ .brands{flex-wrap:wrap;overflow:visible;margin-inline:0;padding-inline:0} }
+@media (max-width:899px){ .brands{-webkit-mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 0,#000 calc(100% - 28px),transparent)} }
+
+/* barra do topo */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:max(12px,env(safe-area-inset-top,0px));padding-bottom:2px}
+.tb-who{display:flex;align-items:center;gap:10px;min-width:0}
+.tb-av{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:15px;background:var(--wine-soft);color:var(--wine)}
+.tb-who b{display:block;font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-who small{display:block;font-size:11.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.tb-acts{display:flex;align-items:center;gap:8px;flex:none}
+.tb-sair{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow);font-weight:700;font-size:13px;cursor:pointer;color:var(--ink)}
+@media (max-width:380px){.tb-who small{display:none}.tb-sair{padding:0 11px}}
+
 /* login e perfis */
 .login{position:fixed;inset:0;z-index:200;display:grid;place-items:center;overflow:auto}
 .lg-box{width:min(380px,100%);border-radius:28px;padding:30px 24px 24px;display:flex;flex-direction:column;gap:14px}
@@ -619,6 +633,12 @@ section[id^="v-"] .sec-head .eyebrow i{background:var(--wine);box-shadow:none}
   <symbol id="i-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="2"/><rect x="13" y="4" width="7" height="7" rx="2"/><rect x="4" y="13" width="7" height="7" rx="2"/><rect x="13" y="13" width="7" height="7" rx="2"/></symbol>
   <symbol id="i-rows" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="6" rx="2"/><rect x="3" y="14" width="18" height="6" rx="2"/></symbol>
 </svg>
+
+<!-- barra do topo -->
+<div class="wrap topbar" id="topbar" hidden>
+  <div class="tb-who"><span class="tb-av" id="tbAv"></span><span><b id="tbNome"></b><small id="tbPapel"></small></span></div>
+  <div class="tb-acts"><div class="theme" role="group" aria-label="Aparência"><button type="button" data-tema="auto" aria-pressed="false" aria-label="Igual ao aparelho" title="Igual ao aparelho"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button><button type="button" data-tema="light" aria-pressed="false" aria-label="Modo claro" title="Modo claro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><button type="button" data-tema="dark" aria-pressed="false" aria-label="Modo escuro" title="Modo escuro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg></button></div><button class="tb-sair" id="sair2" type="button">Sair</button></div>
+</div>
 
 <!-- ================= ESTOQUE ================= -->
 <section id="v-estoque">
@@ -794,7 +814,7 @@ section[id^="v-"] .sec-head .eyebrow i{background:var(--wine);box-shadow:none}
   <button role="tab" id="t-estoque" data-view="estoque" aria-selected="true"><svg><use href="#i-box"/></svg>Estoque</button>
   <button role="tab" id="t-analise" data-view="analise" aria-selected="false"><svg><use href="#i-chart"/></svg>Análise</button>
   <button role="tab" class="so-adm" id="t-fotos" data-view="fotos" aria-selected="false"><svg><use href="#i-img"/></svg>Fotos</button>
-  <button role="tab" id="t-planilha" data-view="planilha" aria-selected="false"><svg><use href="#i-up"/></svg>Planilha</button>
+  <button role="tab" class="so-adm" id="t-planilha" data-view="planilha" aria-selected="false"><svg><use href="#i-up"/></svg>Planilha</button>
   <button role="tab" class="so-adm" id="t-gestao" data-view="gestao" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.900 2.100 6.500 5.500M16 4.800a3.500 3.500 0 0 1 0 6.400M18.500 14.900c1.700.8 2.700 2.500 3 5.100"/></svg>Gestão</button>
 </nav>
 
@@ -1056,7 +1076,7 @@ $('btGrid').addEventListener('click', e=>{
 function renderBrands(){
   const total = ITEMS.filter(i=>i.qty>0).length;
   $('brands').innerHTML = `<button class="bchip" type="button" data-b="" aria-pressed="${!ui.brand}">Todas as marcas<small>${total}</small></button>` +
-    BRANDS.map(([b,n]) => `<button class="bchip" type="button" data-b="${esc(b)}" aria-pressed="${ui.brand===b}" style="${bstyle(b)}"><i></i>${esc(tc(b))}<small>${n}</small></button>`).join('');
+    BRANDS.map(([b,n]) => `<button class="bchip" type="button" data-b="${esc(b)}" aria-pressed="${ui.brand===b || (ui.brand.startsWith('g:') && ui.brand.slice(2).split('|').some(k=>norm(b).includes(k)))}" style="${bstyle(b)}"><i></i>${esc(tc(b))}<small>${n}</small></button>`).join('');
 }
 
 /* ---------- lista ---------- */
@@ -1425,7 +1445,7 @@ async function handleFile(f){
 
 /* ---------- navegação ---------- */
 function go(v){
-  if (v==='gestao' && ROLE!=='adm') v = 'estoque';
+  if ((v==='gestao' || v==='planilha' || v==='fotos') && SUPA && ROLE!=='adm') v = 'estoque';
   for (const n of ['estoque','analise','fotos','planilha','gestao']){ $('v-'+n).hidden = n!==v; $('t-'+n).setAttribute('aria-selected', n===v); }
   if (v==='gestao') gestaoCarregar();
   window.scrollTo(0,0);
@@ -1441,7 +1461,7 @@ function navH(){}
 $('nav').addEventListener('click', e => { const b = e.target.closest('button[data-view]'); if(!b) return; if (b.getAttribute('aria-selected')==='true') window.scrollTo({top:0,behavior:'smooth'}); else go(b.dataset.view); });
 $('q').addEventListener('input', e => { q = e.target.value; $('clrQ').hidden = !q; render(); const y = $('grid').getBoundingClientRect().top + scrollY - $('toolbar').offsetHeight - 60; if (scrollY > y) window.scrollTo(0, y); });
 $('clrQ').addEventListener('click', () => { $('q').value=''; q=''; $('clrQ').hidden=true; render(); $('q').focus(); });
-$('brands').addEventListener('click', e => { const b = e.target.closest('.bchip'); if(!b) return; ui.brand = ui.brand===b.dataset.b ? '' : b.dataset.b; renderBrands(); render(); renderStage(); });
+$('brands').addEventListener('click', e => { const b = e.target.closest('.bchip'); if(!b) return; ui.brand = (ui.brand===b.dataset.b || b.getAttribute('aria-pressed')==='true') ? '' : b.dataset.b; renderBrands(); render(); renderStage(); });
 document.querySelector('.seg').addEventListener('click', e => { const b = e.target.closest('button[data-t]'); if(!b) return; ui.type = b.dataset.t; render(); });
 document.querySelectorAll('.tile[data-type]').forEach(t => t.addEventListener('click', () => { ui.type = ui.type===t.dataset.type ? '' : t.dataset.type; render(); $('toolbar').scrollIntoView({behavior:'smooth'}); }));
 new IntersectionObserver(([e]) => $('toolbar').classList.toggle('stuck', e.intersectionRatio<1), {threshold:[1], rootMargin:'-1px 0px 0px 0px'}).observe($('toolbar'));
@@ -1497,7 +1517,9 @@ function setRole(){
   document.body.classList.toggle('role-adm', ROLE==='adm');
   document.body.classList.toggle('role-usuario', ROLE!=='adm');
   $('contaTxt').innerHTML = NOME ? `Conectado como <b>${esc(NOME)}</b><span class="conta-papel">${ROLE==='adm'?'ADM':'Usuário'}</span><br>${ROLE==='adm'?'Você atualiza a planilha e as fotos para toda a equipe.':'Você consulta o estoque. Planilha e fotos são atualizadas pela ADM.'}` : '';
-  if (ROLE!=='adm' && (!$('v-fotos').hidden || !$('v-gestao').hidden)) go('estoque');
+  if (ROLE!=='adm' && (!$('v-fotos').hidden || !$('v-gestao').hidden || !$('v-planilha').hidden)) go('estoque');
+  $('topbar').hidden = !NOME;
+  if (NOME) { $('tbAv').textContent = NOME.trim().charAt(0).toUpperCase(); $('tbNome').textContent = NOME; $('tbPapel').textContent = ROLE==='adm' ? 'ADM' : 'Usuário'; }
 }
 function showLogin(msg, kind){
   $('login').hidden = false; document.body.style.overflow = 'hidden';
@@ -1544,7 +1566,7 @@ async function supaSair(){
   try { await sb.auth.signOut(); } catch(e){}
   for (const k of ['.data','.supaFotos','.perfil']) { try { localStorage.removeItem(KEY+k); } catch(e){} }
   if (supaCanal) { try { sb.removeChannel(supaCanal); } catch(e){} supaCanal = null; }
-  ROLE = ''; NOME = ''; OVR = {}; document.body.classList.remove('role-adm','role-usuario');
+  ROLE = ''; NOME = ''; OVR = {}; document.body.classList.remove('role-adm','role-usuario'); $('topbar').hidden = true;
   load(SEED); go('estoque'); $('lgUser').value = ''; showLogin('');
 }
 if (SUPA) {
@@ -1563,6 +1585,7 @@ if (SUPA) {
   $('lgUser').addEventListener('beforeinput', e => { if (e.data && e.data.includes('@') && e.inputType !== 'insertFromPaste') { e.preventDefault(); showLogin('Digite só o nome, sem @ e sem e-mail.', 'info'); } });
   $('lgUser').addEventListener('input', e => { const v = e.target.value; if (v.includes('@')) { e.target.value = v.split('@')[0]; showLogin('Digite só o nome, sem @ e sem e-mail.', 'info'); } });
   $('sair').addEventListener('click', supaSair);
+  $('sair2').addEventListener('click', supaSair);
   sb.auth.onAuthStateChange((ev) => { if (ev === 'SIGNED_OUT' && NOME) { NOME=''; ROLE=''; showLogin('Sua sessão terminou. Entre de novo.', 'info'); } });
   const cachedPerfil = lsGet(KEY+'.perfil');
   if (!cachedPerfil) showLogin('');
@@ -1642,7 +1665,8 @@ async function gestaoCarregar(){
 }
 function gErro(e){
   const m = (e && e.message) || '';
-  if (/gestao_|usuario.*does not exist|schema cache/i.test(m)) return 'O banco ainda não tem a parte de Gestão. Rode o arquivo 04_gestao.sql no SQL Editor do Supabase.';
+  if (/gestao_editar/i.test(m) && /could not find|does not exist|schema cache/i.test(m)) return 'Falta atualizar o banco para editar usuários: rode de novo o 04_gestao.sql mais novo no SQL Editor do Supabase.';
+  if (/gestao_|column .*usuario/i.test(m) && /could not find|does not exist|schema cache/i.test(m)) return 'O banco ainda não tem a parte de Gestão. Rode o arquivo 04_gestao.sql no SQL Editor do Supabase.';
   return m || 'Não consegui falar com o banco agora.';
 }
 if ($('gForm')) {
