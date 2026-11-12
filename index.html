@@ -556,6 +556,11 @@ section[id^="v-"] .sec-head .eyebrow i{background:var(--wine);box-shadow:none}
 .tb-sair{height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow);font-weight:700;font-size:13px;cursor:pointer;color:var(--ink)}
 @media (max-width:380px){.tb-who small{display:none}.tb-sair{padding:0 11px}}
 
+/* bolinha de notificação */
+.dock button{position:relative}
+.nbadge{position:absolute;top:3px;left:calc(50% + 4px);min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#ff3b30;color:#fff;font-size:10.5px;font-weight:800;line-height:18px;text-align:center;box-shadow:0 0 0 2px rgba(24,25,29,.95);font-variant-numeric:tabular-nums;animation:nbPop .35s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes nbPop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+
 /* login e perfis */
 .login{position:fixed;inset:0;z-index:200;display:grid;place-items:center;overflow:auto}
 .lg-box{width:min(380px,100%);border-radius:28px;padding:30px 24px 24px;display:flex;flex-direction:column;gap:14px}
@@ -815,7 +820,7 @@ section[id^="v-"] .sec-head .eyebrow i{background:var(--wine);box-shadow:none}
   <button role="tab" id="t-analise" data-view="analise" aria-selected="false"><svg><use href="#i-chart"/></svg>Análise</button>
   <button role="tab" class="so-adm" id="t-fotos" data-view="fotos" aria-selected="false"><svg><use href="#i-img"/></svg>Fotos</button>
   <button role="tab" class="so-adm" id="t-planilha" data-view="planilha" aria-selected="false"><svg><use href="#i-up"/></svg>Planilha</button>
-  <button role="tab" class="so-adm" id="t-gestao" data-view="gestao" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.900 2.100 6.500 5.500M16 4.800a3.500 3.500 0 0 1 0 6.400M18.500 14.900c1.700.8 2.700 2.500 3 5.100"/></svg>Gestão</button>
+  <button role="tab" class="so-adm" id="t-gestao" data-view="gestao" aria-selected="false"><span class="nbadge" id="gBadge" hidden></span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.6-3.4 3.2-5.5 6.5-5.5s5.900 2.100 6.500 5.500M16 4.800a3.500 3.500 0 0 1 0 6.400M18.500 14.900c1.700.8 2.700 2.500 3 5.100"/></svg>Gestão</button>
 </nav>
 
 <!-- ficha do item -->
@@ -925,6 +930,13 @@ function novosIds(){
   if (!DATA || !Array.isArray(DATA.novos) || !DATA.novos_em) return new Set();
   if (Date.now() - new Date(DATA.novos_em).getTime() > NOVO_DIAS*864e5) return new Set();
   return new Set(DATA.novos.map(String));
+}
+function gBadgeUpd(){
+  const el = document.getElementById('gBadge'); if (!el) return;
+  const n = ITEMS.filter(it => photoOf(it.id).kind==='none').length;
+  el.hidden = !n; el.textContent = n > 99 ? '99+' : String(n);
+  el.parentElement.setAttribute('aria-label', n ? `Gestão: ${n} ${n===1?'material sem foto':'materiais sem foto'}` : 'Gestão');
+  el.parentElement.title = n ? `${n} ${n===1?'material sem foto':'materiais sem foto'}` : '';
 }
 const novoTag = it => novosIds().has(String(it.id)) ? '<span class="tg novo">Novo</span>' : '';
 
@@ -1125,6 +1137,7 @@ function render(){
     </button>`).join('')
     : `<div class="empty"><b>Nada por aqui</b>${q?`Nenhum material com “${esc(q)}”.`:'Nenhum material neste filtro.'}</div>`;
   lsSet(KEY+'.ui4', ui);
+  gBadgeUpd();
 }
 
 /* ---------- ficha ---------- */
